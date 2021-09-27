@@ -705,47 +705,40 @@ you can specifiy hardhat via "--network hardhat"
     await runSuper(args);
   });
 
-subtask(TASK_NODE_GET_PROVIDER).setAction(
-  async (args, hre, runSuper): Promise<EthereumProvider> => {
-    const provider = await runSuper(args);
-
-    if (!nodeTaskArgs.noReset) {
-      await deploymentsManager.deletePreviousDeployments('localhost');
-    }
-
-    if (nodeTaskArgs.noDeploy) {
-      // console.log('skip');
-      return provider;
-    }
-    // console.log('enabling logging');
-    await enableProviderLogging(provider, false);
-
-    const networkName = getNetworkName(hre.network);
-    if (networkName !== hre.network.name) {
-      console.log(`copying ${networkName}'s deployment to localhost...`);
-      // copy existing deployment from specified netwotk into localhost deployment folder
-      fs.copy(
-        path.join(hre.config.paths.deployments, networkName),
-        path.join(hre.config.paths.deployments, 'localhost')
-      );
-    }
-
-    nodeTaskArgs.log = !nodeTaskArgs.silent;
-    delete nodeTaskArgs.silent;
-    nodeTaskArgs.pendingtx = false;
-    await hre.run(TASK_DEPLOY_MAIN, {
-      ...nodeTaskArgs,
-      watch: false,
-      reset: false,
-    });
-
-    await enableProviderLogging(provider, true);
-
-    return provider;
-  }
-);
-
 subtask(TASK_NODE_SERVER_READY).setAction(async (args, hre, runSuper) => {
+  if (nodeTaskArgs.noDeploy) {
+    await runSuper(args);
+    return;
+  }
+
+  if (!nodeTaskArgs.noReset) {
+    await deploymentsManager.deletePreviousDeployments('localhost');
+  }
+
+  // console.log('enabling logging');
+  await enableProviderLogging(hre.network.provider, false);
+
+  const networkName = getNetworkName(hre.network);
+  if (networkName !== hre.network.name) {
+    console.log(`copying ${networkName}'s deployment to localhost...`);
+    // copy existing deployment from specified netwotk into localhost deployment folder
+    fs.copy(
+      path.join(hre.config.paths.deployments, networkName),
+      path.join(hre.config.paths.deployments, 'localhost')
+    );
+  }
+
+  nodeTaskArgs.log = !nodeTaskArgs.silent;
+  delete nodeTaskArgs.silent;
+  nodeTaskArgs.pendingtx = false;
+  await hre.run(TASK_DEPLOY_MAIN, {
+    ...nodeTaskArgs,
+    watch: false,
+    reset: false,
+  });
+
+  await enableProviderLogging(hre.network.provider, true);
+
   if (nodeTaskArgs.showAccounts) {
     await runSuper(args);
   } else {
