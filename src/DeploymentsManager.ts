@@ -31,9 +31,12 @@ import {
   getDeployPaths,
 } from './utils';
 import {addHelpers, waitForTx} from './helpers';
-import {TransactionResponse} from '@ethersproject/providers';
+import {TransactionResponse, Web3Provider} from '@ethersproject/providers';
 import {Artifact, HardhatRuntimeEnvironment, Network} from 'hardhat/types';
 import {store} from './globalStore';
+import {ContractFactory} from '@ethersproject/contracts';
+import {Signer} from '@ethersproject/abstract-signer';
+import {Wallet} from '@ethersproject/wallet';
 
 export class DeploymentsManager {
   public deploymentsExtension: DeploymentsExtension;
@@ -410,6 +413,22 @@ export class DeploymentsManager {
 
     this.deploymentsExtension = helpers.extension;
     this.utils = helpers.utils;
+  }
+
+  public getContractFactory(
+    abi: any[],
+    bytecode: string,
+    ethersSigner: Signer
+  ): ContractFactory {
+    return new ContractFactory(abi, bytecode, ethersSigner);
+  }
+
+  public getWalletFromPrivateKey(priv: string, provider: Web3Provider): Wallet {
+    return new Wallet(priv, provider);
+  }
+
+  public getSigner(address: string, provider: Web3Provider): Signer {
+    return provider.getSigner(address);
   }
 
   private networkWasSetup = false;

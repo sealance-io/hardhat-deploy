@@ -6,14 +6,9 @@ import {
   TransactionRequest,
 } from '@ethersproject/providers';
 import {getAddress} from '@ethersproject/address';
-import {
-  Contract,
-  ContractFactory,
-  PayableOverrides,
-} from '@ethersproject/contracts';
+import {Contract, PayableOverrides} from '@ethersproject/contracts';
 import {AddressZero} from '@ethersproject/constants';
 import {BigNumber} from '@ethersproject/bignumber';
-import {Wallet} from '@ethersproject/wallet';
 import {keccak256 as solidityKeccak256} from '@ethersproject/solidity';
 import {zeroPad, hexlify} from '@ethersproject/bytes';
 import {Interface, FunctionFragment} from '@ethersproject/abi';
@@ -550,7 +545,7 @@ export function addHelpers(
       nonce: options.nonce,
     };
 
-    const factory = new ContractFactory(
+    const factory = deploymentManager.getContractFactory(
       linkedArtifact.abi,
       linkedArtifact.bytecode,
       ethersSigner
@@ -777,7 +772,11 @@ export function addHelpers(
       const {artifact} = artifactInfo;
       const abi = artifact.abi;
       const byteCode = linkLibraries(artifact, options.libraries);
-      const factory = new ContractFactory(abi, byteCode, ethersSigner);
+      const factory = deploymentManager.getContractFactory(
+        abi,
+        byteCode,
+        ethersSigner
+      );
 
       const numArguments = factory.interface.deploy.inputs.length;
       if (args.length !== numArguments) {
@@ -839,7 +838,11 @@ export function addHelpers(
       const {artifact} = artifactInfo;
       const abi = artifact.abi;
       const byteCode = linkLibraries(artifact, options.libraries);
-      const factory = new ContractFactory(abi, byteCode, ethersSigner);
+      const factory = deploymentManager.getContractFactory(
+        abi,
+        byteCode,
+        ethersSigner
+      );
 
       const numArguments = factory.interface.deploy.inputs.length;
       if (argArray.length !== numArguments) {
@@ -896,7 +899,11 @@ export function addHelpers(
         const {artifact} = await getArtifactFromOptions(name, options);
         const abi = artifact.abi;
         const byteCode = linkLibraries(artifact, options.libraries);
-        const factory = new ContractFactory(abi, byteCode, ethersSigner);
+        const factory = deploymentManager.getContractFactory(
+          abi,
+          byteCode,
+          ethersSigner
+        );
         const newTransaction = factory.getDeployTransaction(...argArray);
         const newData = newTransaction.data?.toString();
 
@@ -1643,12 +1650,12 @@ Note that in this case, the contract deployment will not behave the same if depl
       if (from.length === 64) {
         from = '0x' + from;
       }
-      const wallet = new Wallet(from, provider);
+      const wallet = deploymentManager.getWalletFromPrivateKey(from, provider);
       from = wallet.address;
       ethersSigner = wallet;
     } else {
       if (availableAccounts[from.toLowerCase()]) {
-        ethersSigner = provider.getSigner(from);
+        ethersSigner = deploymentManager.getSigner(from, provider);
       } else {
         // TODO register protocol based account as availableAccounts ? if so do not else here
         const registeredProtocol =
@@ -1682,9 +1689,15 @@ Note that in this case, the contract deployment will not behave the same if depl
             ethersSigner = new LedgerSigner(provider);
             hardwareWallet = 'ledger';
           } else if (registeredProtocol.startsWith('privatekey')) {
-            ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
+            ethersSigner = deploymentManager.getWalletFromPrivateKey(
+              registeredProtocol.substring(13),
+              provider
+            );
           } else if (registeredProtocol.startsWith('gnosis')) {
-            ethersSigner = new Wallet(registeredProtocol.substr(13), provider);
+            ethersSigner = deploymentManager.getWalletFromPrivateKey(
+              registeredProtocol.substring(13),
+              provider
+            );
           }
         }
       }
