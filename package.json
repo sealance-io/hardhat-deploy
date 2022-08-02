@@ -1,12 +1,13 @@
 {
-  "name": "hardhat-deploy",
+  "name": "@sealance-io/hardhat-deploy",
   "version": "0.11.12",
   "description": "Hardhat Plugin For Replicable Deployments And Tests",
-  "repository": "github:wighawag/hardhat-deploy",
-  "author": "wighawag",
+  "repository": "github:sealance-io/hardhat-deploy",
+  "author": "Sealance-io Team",
   "license": "MIT",
   "publishConfig": {
-    "access": "public"
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com"
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
